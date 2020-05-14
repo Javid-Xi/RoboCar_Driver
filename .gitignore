@@ -1,0 +1,12 @@
+*.hex
+*.orig
+*.dbgconf
+*.uvguix.Javid
+*.uvguix.admin
+*.uvoptx
+*.lst
+*.mxproject
+*.map
+/Project/DebugConfig
+/Project/Listings
+/Project/Objects
