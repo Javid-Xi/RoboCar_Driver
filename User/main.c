@@ -18,6 +18,7 @@
 #include "ps2.h"
 #include "key.h"
 #include "adc.h"
+#include "pid.h"
 #include "mpu6050.h"
 #include "inv_mpu.h"
 #include "inv_mpu_dmp_motion_driver.h"
@@ -33,9 +34,6 @@
 #define LIMIT_VY  50  //速度限制
 #define LIMIT_VZ  50  //速度限制
 
-#define PID_SCALE  0.01f  //PID缩放系数
-#define PID_INTEGRAL_UP 1000  //积分上限
-
 //编码器控制，0-A，1-B，2-C，3-D
 int16_t encoder[4];	//编码器绝对值
 int16_t encoder_delta[4];	//编码器相对变化值,代表实际速度
@@ -46,18 +44,11 @@ int16_t vx; //X轴运动速度，控制横向移动
 int16_t vy; //Y轴运动速度，控制前后移动
 int16_t vz; //Z轴运动速度，控制转向
 
-int16_t motor_kp = 130; //PID参数
-int16_t motor_ki = 0; //PID参数
-int16_t motor_kd = 30; //PID参数
-
 extern rcv_data	uart_rcv_data;//数据接收
 
 //功能函数
 void MOVE_Kinematics(int16_t vx, int16_t vy, int16_t vz); //运行学解析
-int16_t Motor_PidCtl_A(int16_t spd_target, int16_t spd_current);   //PID控制
-int16_t Motor_PidCtl_B(int16_t spd_target, int16_t spd_current);   //PID控制
-int16_t Motor_PidCtl_C(int16_t spd_target, int16_t spd_current);   //PID控制
-int16_t Motor_PidCtl_D(int16_t spd_target, int16_t spd_current);   //PID控制
+
 void UART_data_analyze(uint8_t *comdata);	//蓝牙控制数据解析
 void PS2_data_analyze(void);		//PS2控制数据解析
 
@@ -240,110 +231,6 @@ void MOVE_Kinematics(int16_t vx, int16_t vy, int16_t vz)
     encoder_delta_target[3] = (vx + vy + ROBOT_AB * vz);
 }
 
-/*************************************************
-* Function: Motor_PidCtl_A
-* Description: 	电机A PID控制函数	
-* Parameter:  	spd_target:编码器速度目标值
-*				spd_current: 编码器速度当前值
-* Return: 电机PWM速度
-*************************************************/
-int16_t Motor_PidCtl_A(int16_t spd_target, int16_t spd_current)
-{
-    static int16_t motor_pwm_out;
-    static int32_t bias, bias_last, bias_integral = 0;
-
-    bias = spd_target - spd_current;
-
-    bias_integral += bias;
-
-    if(bias_integral > PID_INTEGRAL_UP)bias_integral = PID_INTEGRAL_UP;
-    if(bias_integral < -PID_INTEGRAL_UP)bias_integral = -PID_INTEGRAL_UP;
-
-    motor_pwm_out += motor_kp * bias * PID_SCALE + motor_kd * (bias - bias_last) * PID_SCALE + motor_ki * bias_integral * PID_SCALE;
-
-    bias_last = bias;
-
-    return motor_pwm_out;
-}
-
-/*************************************************
-* Function: Motor_PidCtl_B
-* Description: 	电机B PID控制函数	
-* Parameter:  	spd_target:编码器速度目标值
-*				spd_current: 编码器速度当前值
-* Return: 电机PWM速度
-*************************************************/
-int16_t Motor_PidCtl_B(int16_t spd_target, int16_t spd_current)
-{
-    static int16_t motor_pwm_out;
-    static int32_t bias, bias_last, bias_integral = 0;
-
-
-    bias = spd_target - spd_current;
-
-    bias_integral += bias;
-
-    if(bias_integral > PID_INTEGRAL_UP)bias_integral = PID_INTEGRAL_UP;
-    if(bias_integral < -PID_INTEGRAL_UP)bias_integral = -PID_INTEGRAL_UP;
-
-    motor_pwm_out += motor_kp * bias * PID_SCALE + motor_kd * (bias - bias_last) * PID_SCALE + motor_ki * bias_integral * PID_SCALE;
-
-    bias_last = bias;
-
-    return motor_pwm_out;
-}
-
-/*************************************************
-* Function: Motor_PidCtl_C
-* Description: 	电机C PID控制函数	
-* Parameter:  	spd_target:编码器速度目标值
-*				spd_current: 编码器速度当前值
-* Return: 电机PWM速度
-*************************************************/
-int16_t Motor_PidCtl_C(int16_t spd_target, int16_t spd_current)
-{
-    static int16_t motor_pwm_out;
-    static int32_t bias, bias_last, bias_integral = 0;
-
-    bias = spd_target - spd_current;
-
-    bias_integral += bias;
-
-    if(bias_integral > PID_INTEGRAL_UP)bias_integral = PID_INTEGRAL_UP;
-    if(bias_integral < -PID_INTEGRAL_UP)bias_integral = -PID_INTEGRAL_UP;
-
-    motor_pwm_out += motor_kp * bias * PID_SCALE + motor_kd * (bias - bias_last) * PID_SCALE + motor_ki * bias_integral * PID_SCALE;
-
-    bias_last = bias;
-
-    return motor_pwm_out;
-}
-
-/*************************************************
-* Function: Motor_PidCtl_D
-* Description: 	电机D PID控制函数	
-* Parameter:  	spd_target:编码器速度目标值
-*				spd_current: 编码器速度当前值
-* Return: 电机PWM速度
-*************************************************/
-int16_t Motor_PidCtl_D(int16_t spd_target, int16_t spd_current)
-{
-    static int16_t motor_pwm_out;
-    static int32_t bias, bias_last, bias_integral = 0;
-
-    bias = spd_target - spd_current;
-
-    bias_integral += bias;
-
-    if(bias_integral > PID_INTEGRAL_UP)bias_integral = PID_INTEGRAL_UP;
-    if(bias_integral < -PID_INTEGRAL_UP)bias_integral = -PID_INTEGRAL_UP;
-
-    motor_pwm_out += motor_kp * bias * PID_SCALE + motor_kd * (bias - bias_last) * PID_SCALE + motor_ki * bias_integral * PID_SCALE;
-
-    bias_last = bias;
-
-    return motor_pwm_out;
-}
 
 /*************************************************
 * Function: UART_data_analyze
@@ -377,9 +264,9 @@ void UART_data_analyze(uint8_t *comdata)
         //设置电机PID参数，默认
         if(comdata[0] == 11)
         {
-            motor_kp = (int16_t)((comdata[1] << 8) | comdata[2]);
-            motor_ki = (int16_t)((comdata[3] << 8) | comdata[4]);
-            motor_kd = (int16_t)((comdata[5] << 8) | comdata[6]);
+//            motor_kp = (int16_t)((comdata[1] << 8) | comdata[2]);
+//            motor_ki = (int16_t)((comdata[3] << 8) | comdata[4]);
+//            motor_kd = (int16_t)((comdata[5] << 8) | comdata[6]);
         }
     }
 }

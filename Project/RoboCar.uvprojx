@@ -472,6 +472,16 @@
               <FileType>1</FileType>
               <FilePath>..\Robo\eMPL\inv_mpu_dmp_motion_driver.c</FilePath>
             </File>
+            <File>
+              <FileName>pid.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Robo\pid.c</FilePath>
+            </File>
+            <File>
+              <FileName>odom.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Robo\odom.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
