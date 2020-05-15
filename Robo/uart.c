@@ -15,8 +15,8 @@ uint8_t USARTzTxBuffer[USARTzTxBufferSize];
 uint8_t USARTzRxBuffer[USARTzTxBufferSize];
 uint8_t USARTzRxBufferD[USARTzTxBufferSize];
 
-send_data	uart_send_data;//数据发送
-rcv_data	uart_rcv_data;//数据接收
+//send_data	uart_send_data;//数据发送
+extern rcv_data	uart_rcv_data;//数据接收
 
 /*************************************************
 * Function: UART_Init
@@ -24,7 +24,7 @@ rcv_data	uart_rcv_data;//数据接收
 * Parameter: none
 * Return: none
 *************************************************/
-void UART_Init(void)
+void UART_DMA_Init(void)
 {
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
     RCC_APB2PeriphClockCmd(USARTz_GPIO_CLK, ENABLE);
@@ -47,14 +47,14 @@ void UART_Init(void)
 
     /* NVIC配置 */
     NVIC_InitStructure.NVIC_IRQChannel = (uint8_t)UASRTz_TX_DMA_IRQ;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
     /* Enable the USARTz Interrupt */
     NVIC_InitStructure.NVIC_IRQChannel = USARTz_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
@@ -125,11 +125,11 @@ void UART_Init(void)
 *************************************************/
 void DMA1_Channel4_IRQHandler(void)
 {
-	//判断是否发送完成
+    //判断是否发送完成
     if(DMA_GetITStatus(DMA1_FLAG_TC4))
     {
         DMA_ClearFlag(USARTz_Tx_DMA_FLAG);    //清除DMA所有标志
-    DMA_Cmd(USARTz_Tx_DMA_Channe, DISABLE);  //关闭DMA发送通道
+        DMA_Cmd(USARTz_Tx_DMA_Channe, DISABLE);  //关闭DMA发送通道
     }
 }
 
@@ -150,7 +150,7 @@ void UART_DMA_Start_tx(uint8_t size)
 /*************************************************
 * Function: USART1_IRQHandler
 * Description: 串口中断服务函数
-* Parameter: size,发送数据长度
+* Parameter: none
 * Return: none
 * Note: 中断向量定义在startup_stm32f10x.s中
 *************************************************/
@@ -195,59 +195,26 @@ void UART_DMA_Read(void)
 /*************************************************
 * Function: UART_data_send
 * Description: 数据打包发送
-* Parameter: none
+* Parameter: *data
 * Return: none
 *************************************************/
-void UART_data_send(void)
+void UART_data_send(send_data *data)
 {
-
-    uart_send_data.x_pos.fv = 2.68;//x坐标
-    uart_send_data.y_pos.fv = 3.96;//y坐标
-    uart_send_data.x_v.fv	= 0.6;//x方向速度
-    uart_send_data.y_v.fv = 0.0;//y 方向速度
-    uart_send_data.angular_v.fv = 2.0;//角速度 绕z轴
-    uart_send_data.pose_angular.fv = 1.0;//yaw偏航角
-
     USARTzTxBuffer[0] = 0xaa;
     USARTzTxBuffer[1] = 0xaa;
 
-    USARTzTxBuffer[2] = uart_send_data.x_pos.cv[0];
-    USARTzTxBuffer[3] = uart_send_data.x_pos.cv[1];
-    USARTzTxBuffer[4] = uart_send_data.x_pos.cv[2];
-    USARTzTxBuffer[5] = uart_send_data.x_pos.cv[3];
+    USARTzTxBuffer[2] = data->Speed_A;
+    USARTzTxBuffer[3] = data->Speed_B;
+    USARTzTxBuffer[4] = data->Speed_C;
+    USARTzTxBuffer[5] = data->Speed_D;
 
-    USARTzTxBuffer[6] = uart_send_data.y_pos.cv[0];
-    USARTzTxBuffer[7] = uart_send_data.y_pos.cv[1];
-    USARTzTxBuffer[8] = uart_send_data.y_pos.cv[2];
-    USARTzTxBuffer[9] = uart_send_data.y_pos.cv[3];
+    USARTzTxBuffer[6] = data->yaw.cv[0];
+    USARTzTxBuffer[7] = data->yaw.cv[1];
 
-    USARTzTxBuffer[10] = uart_send_data.x_v.cv[0];
-    USARTzTxBuffer[11] = uart_send_data.x_v.cv[1];
-    USARTzTxBuffer[12] = uart_send_data.x_v.cv[2];
-    USARTzTxBuffer[13] = uart_send_data.x_v.cv[3];
+    USARTzTxBuffer[8] = USARTzTxBuffer[2] ^ USARTzTxBuffer[3] ^ USARTzTxBuffer[4] ^ USARTzTxBuffer[5] ^
+                         USARTzTxBuffer[6] ^ USARTzTxBuffer[7];
 
-    USARTzTxBuffer[14] = uart_send_data.y_v.cv[0];
-    USARTzTxBuffer[15] = uart_send_data.y_v.cv[1];
-    USARTzTxBuffer[16] = uart_send_data.y_v.cv[2];
-    USARTzTxBuffer[17] = uart_send_data.y_v.cv[3];
-
-    USARTzTxBuffer[18] = uart_send_data.angular_v.cv[0];
-    USARTzTxBuffer[19] = uart_send_data.angular_v.cv[1];
-    USARTzTxBuffer[20] = uart_send_data.angular_v.cv[2];
-    USARTzTxBuffer[21] = uart_send_data.angular_v.cv[3];
-
-    USARTzTxBuffer[22] = uart_send_data.pose_angular.cv[0];
-    USARTzTxBuffer[23] = uart_send_data.pose_angular.cv[1];
-    USARTzTxBuffer[24] = uart_send_data.pose_angular.cv[2];
-    USARTzTxBuffer[25] = uart_send_data.pose_angular.cv[3];
-
-    USARTzTxBuffer[26] = USARTzTxBuffer[2] ^ USARTzTxBuffer[3] ^ USARTzTxBuffer[4] ^ USARTzTxBuffer[5] ^ USARTzTxBuffer[6] ^
-                         USARTzTxBuffer[7] ^ USARTzTxBuffer[8] ^ USARTzTxBuffer[9] ^ USARTzTxBuffer[10] ^ USARTzTxBuffer[11] ^
-                         USARTzTxBuffer[12] ^ USARTzTxBuffer[13] ^ USARTzTxBuffer[14] ^ USARTzTxBuffer[15] ^ USARTzTxBuffer[16] ^
-                         USARTzTxBuffer[17] ^ USARTzTxBuffer[18] ^ USARTzTxBuffer[19] ^ USARTzTxBuffer[20] ^ USARTzTxBuffer[21] ^
-                         USARTzTxBuffer[22] ^ USARTzTxBuffer[23] ^ USARTzTxBuffer[24] ^ USARTzTxBuffer[25];
-
-    UART_DMA_Start_tx(27);	//数据包发送
+    UART_DMA_Start_tx(9);	//数据包发送
 }
 
 /*************************************************
@@ -262,10 +229,10 @@ int8_t UART_data_check(uint8_t	*pdata)
     int8_t  p_crc = 0;
     if((*(pdata + 0) == 0xff) && (*(pdata + 1) == 0xff)) {
         crc = (*(pdata + 2)) ^ (*(pdata + 3)) ^ (*(pdata + 4));//不进行类型转换，负数不正常
-		p_crc = (int8_t)(*(pdata + 5));//不进行类型转换，负数不正常
+        p_crc = (int8_t)(*(pdata + 5));//不进行类型转换，负数不正常
     }
     else return 0;
-  
+
     if(p_crc != crc ) return 0;//校验和分析有误
 
     //数据包分析正确，提取数据

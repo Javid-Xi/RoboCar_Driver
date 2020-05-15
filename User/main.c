@@ -10,8 +10,9 @@
 
 #include "sys.h"
 #include "delay.h"
-#include "led.h" 
+#include "led.h"
 #include "uart.h"
+#include "uart_mpu.h"
 #include "motor.h"
 #include "encoder.h"
 #include "tim.h"
@@ -19,9 +20,6 @@
 #include "key.h"
 #include "adc.h"
 #include "pid.h"
-#include "mpu6050.h"
-#include "inv_mpu.h"
-#include "inv_mpu_dmp_motion_driver.h"
 
 //常量定义
 #define ENCODER_MID_VALUE  30000  //编码器中间值
@@ -40,11 +38,14 @@ int16_t encoder_delta[4];	//编码器相对变化值,代表实际速度
 int16_t encoder_delta_target[4] = {0}; //编码器目标值，代表目标速度
 int16_t motor_pwm[4];  //电机PWM速度
 
-int16_t vx; //X轴运动速度，控制横向移动
-int16_t vy; //Y轴运动速度，控制前后移动
-int16_t vz; //Z轴运动速度，控制转向
+//设置速度
+int8_t vx; //X轴运动速度，控制横向移动
+int8_t vy; //Y轴运动速度，控制前后移动
+int8_t vz; //Z轴运动速度，控制转向
 
-extern rcv_data	uart_rcv_data;//数据接收
+rcv_data	uart_rcv_data;//数据接收
+send_data uart_send_data;//数据发送
+extern MPU_rcv_data uart_mpu_rcv_data;
 
 //功能函数
 void MOVE_Kinematics(int16_t vx, int16_t vy, int16_t vz); //运行学解析
@@ -60,12 +61,7 @@ void PS2_data_analyze(void);		//PS2控制数据解析
 int main(void)
 {
     uint8_t cnt = 1;  //周期计数变量
-
-    float pitch, roll, yaw; 		//欧拉角
-    short aacx, aacy, aacz;		//加速度传感器原始数据
-    short gyrox, gyroy, gyroz;	//陀螺仪原始数据
-    short temp;					//温度
-
+	
     //设置中断优先级分组
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 
@@ -85,14 +81,11 @@ int main(void)
     PS2_Init();
 
     //串口初始化
-    UART_Init();
+    UART_DMA_Init();
+	UART_MPU_DMA_Init();
+	
+	//ADC初始化
     ADC_DMA_Init();
-
-	//初始化MPU6050和DMP
-    MPU_Init();					
-    while(mpu_dmp_init())
-        printf("MPU6050初始化失败\r\n");
-    printf("MPU6050初始化成功\r\n");
 
     //定时器初始化
     TIM6_Init(10000);//设置定时器周期定时时间，10ms
@@ -130,7 +123,19 @@ int main(void)
             ENCODER_EF_SetCounter(ENCODER_MID_VALUE);
             ENCODER_GH_SetCounter(ENCODER_MID_VALUE);
 
-			//遥控控制
+			//测试
+			if(cnt % 20 == 0)
+			{
+            uart_send_data.Speed_A =  encoder_delta[0];
+            uart_send_data.Speed_B =  encoder_delta[1];
+            uart_send_data.Speed_C =  encoder_delta[2];
+            uart_send_data.Speed_D =  encoder_delta[3];
+			
+			uart_send_data.yaw.sv = uart_mpu_rcv_data.yaw.sv;
+
+            UART_data_send(&uart_send_data);
+			}
+            //遥控控制
             if(!PS2_RedLight() && cnt % 20 == 0 && Mode_get() == 0)
             {
                 PS2_DataKey();	 //手柄按键捕获处理
@@ -139,39 +144,28 @@ int main(void)
                 vy = 0.2 * (- PS2_AnologData(6) + 0x7f);
                 vz = 0.1 * (- PS2_AnologData(3) + 0x80);
             }
-			
-			//串口控制
-			if(Mode_get() == 1)
-			{
-			         vx = 0.2 * uart_rcv_data.vx;
-            vy = 0.3 * uart_rcv_data.vy;
-            vz = - 0.2 * uart_rcv_data.vw;
-			
-			}
 
-			//运动解算
+            //串口控制
+            if(Mode_get() == 1)
+            {
+                vx = 0.2 * uart_rcv_data.vx;
+                vy = 0.3 * uart_rcv_data.vy;
+                vz = - 0.2 * uart_rcv_data.vw;
+            }
+			
+            //运动解算
             MOVE_Kinematics(vx, vy, vz);
 
-			//调试使用
-            if(cnt % 50 == 0)
-            {
-                printf("手柄原始数据：%d %d %d %d %d %d %d %d %d \r\n", Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[6], Data[7], Data[8]);
-                printf("速度：%d %d %d \r\n", vx, vy, vz);
-                printf("解算速度：%d %d %d %d \r\n", encoder_delta_target[0], encoder_delta_target[1], encoder_delta_target[2], encoder_delta_target[3]);
-                printf("mode: %d \r\n", Mode_get());
-                printf("power: %d \r\n ", ADC_Get_power());
-                printf("uart_rcv_data: %d %d %d \r\n", uart_rcv_data.vx, uart_rcv_data.vy, uart_rcv_data.vw);
-
-             while(mpu_dmp_get_data(&pitch,&roll,&yaw)!=0){}	//加while循环防止fifo溢出
-				 
-                    temp = MPU_Get_Temperature();	//得到温度值
-                    MPU_Get_Accelerometer(&aacx, &aacy, &aacz);	//得到加速度传感器数据
-                    MPU_Get_Gyroscope(&gyrox, &gyroy, &gyroz);	//得到陀螺仪数据
-                    printf("温度：%d\r\n", temp);
-                    printf("加速度：%d %d %d\r\n", aacx, aacy, aacz);
-                    printf("陀螺仪：%d %d %d\r\n", gyrox, gyroy, gyroz);
-                    printf("角度：%f %f %f\r\n", pitch, roll, yaw);
-            }
+//            //调试使用
+//            if(cnt % 50 == 0)
+//            {
+//                printf("手柄原始数据：%d %d %d %d %d %d %d %d %d \r\n", Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[6], Data[7], Data[8]);
+//                printf("速度：%d %d %d \r\n", vx, vy, vz);
+//                printf("解算速度：%d %d %d %d \r\n", encoder_delta_target[0], encoder_delta_target[1], encoder_delta_target[2], encoder_delta_target[3]);
+//                printf("mode: %d \r\n", Mode_get());
+//                printf("power: %d \r\n ", ADC_Get_power());
+//                printf("uart_rcv_data: %d %d %d \r\n", uart_rcv_data.vx, uart_rcv_data.vy, uart_rcv_data.vw);
+//            }
 
             //PID控制
             motor_pwm[0] = Motor_PidCtl_A(encoder_delta_target[0], encoder_delta[0]);
@@ -208,7 +202,7 @@ int main(void)
 
 /*************************************************
 * Function: MOVE_Kinematics
-* Description: 由坐标XYZ速度解析为电机目标转速	
+* Description: 由坐标XYZ速度解析为电机目标转速
 * Parameter: vx，vy，vz  三轴坐标速度
 * Return: none
 *************************************************/
@@ -230,7 +224,6 @@ void MOVE_Kinematics(int16_t vx, int16_t vy, int16_t vz)
     encoder_delta_target[2] =  (-vx + vy - ROBOT_AB * vz);
     encoder_delta_target[3] = (vx + vy + ROBOT_AB * vz);
 }
-
 
 /*************************************************
 * Function: UART_data_analyze
