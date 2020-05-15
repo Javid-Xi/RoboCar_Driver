@@ -1,7 +1,7 @@
 /**
 ************************************************************
-* @file         uart.c
-* @brief        串口DMA通信
+* @file         uart_mpu.h
+* @brief        串口2DMA通信 读取jy-901模块姿态数据
 * @author       Javid
 * @date         2020-05-14
 * @version      1.0

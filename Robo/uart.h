@@ -1,11 +1,20 @@
 /**
 ************************************************************
-* @file         uart.c
+* @file         uart.h
 * @brief        串口DMA通信
 * @author       Javid
 * @date         2020-05-14
 * @version      1.0
 *
+* @Note 		DMA_FLAG_GLx     通道 x 全局标志位 
+*				DMA_FLAG_TCx     通道 x 传输完成标志位 
+*				DMA_FLAG_HTx     通道 x 传输过半标志位 
+*				DMA_FLAG_TEx     通道 x 传输错误标志位 
+*
+*				DMA_IT_GLx	     通道 x 全局中断 
+*				DMA_IT_TCx	     通道 x 传输完成中断 
+*				DMA_IT_HTx       通道 x 传输过半中断 
+*				DMA_IT_TEx       通道 x 传输错误中断
 ***********************************************************/
 
 #ifndef __UART_H
@@ -24,11 +33,11 @@
 #define USARTz_DR_Base					(uint32_t)(&USART1->DR)
 
 #define USARTz_Tx_DMA_Channe			DMA1_Channel4
-#define USARTz_Tx_DMA_FLAG				DMA1_FLAG_GL4 //DMA1_FLAG_TC2|DMA1_FLAG_TE2
+#define USARTz_Tx_DMA_FLAG				DMA1_FLAG_GL4
 #define UASRTz_TX_DMA_IRQ				DMA1_Channel4_IRQn
 
 #define USARTz_Rx_DMA_Channe			DMA1_Channel5
-#define USARTz_Rx_DMA_FLAG				DMA1_FLAG_GL5 //DMA1_FLAG_TC3 |DMA1_FLAG_TE3
+#define USARTz_Rx_DMA_FLAG				DMA1_FLAG_GL5
 #define USARTz_RX_DMA_IRQ				DMA1_Channel5_IRQn
 
 //浮点数与HEX快速获取

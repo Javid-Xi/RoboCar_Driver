@@ -11,6 +11,7 @@
 *				T=((TH<<8)|TL) /100 ¡æ
 *				Ð£ÑéºÍ£º
 *				Sum=0x55+0x53+RollH+RollL+PitchH+PitchL+YawH+YawL+TH+TL
+*
 ***********************************************************/
 
 #include "uart_mpu.h"
