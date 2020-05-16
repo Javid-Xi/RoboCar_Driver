@@ -9,10 +9,11 @@
 ***********************************************************/
 
 #include "led.h"
+#include "delay.h"
 
 /*************************************************
 * Function: LED_Init
-* Description: LED/BEEP 初始化	
+* Description: LED/BEEP 初始化
 * Parameter: none
 * Return: none
 *************************************************/
@@ -37,3 +38,32 @@ void LED_Init(void)
     //关闭蜂鸣器
     GPIO_SetBits(GPIOB, GPIO_Pin_10);
 }
+
+/*************************************************
+* Function: Sysinit_Complete
+* Description: 系统初始化信号
+* Parameter: none
+* Return: none
+*************************************************/
+void Sysinit_Complete(void)
+{
+    GPIO_ResetBits(GPIOB, GPIO_Pin_10);
+    GPIO_ResetBits(GPIOA, GPIO_Pin_8);
+    delay_ms(100);
+    GPIO_SetBits(GPIOB, GPIO_Pin_10);
+    GPIO_SetBits(GPIOA, GPIO_Pin_8);
+    delay_ms(100);
+    GPIO_ResetBits(GPIOB, GPIO_Pin_10);
+    GPIO_ResetBits(GPIOA, GPIO_Pin_8);
+    delay_ms(100);
+    GPIO_SetBits(GPIOB, GPIO_Pin_10);
+    GPIO_SetBits(GPIOA, GPIO_Pin_8);
+    delay_ms(100);
+    GPIO_ResetBits(GPIOB, GPIO_Pin_10);
+    GPIO_ResetBits(GPIOA, GPIO_Pin_8);
+    delay_ms(100);
+    GPIO_SetBits(GPIOB, GPIO_Pin_10);
+    GPIO_SetBits(GPIOA, GPIO_Pin_8);
+}
+
+

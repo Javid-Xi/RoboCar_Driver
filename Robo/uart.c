@@ -203,18 +203,26 @@ void UART_data_send(send_data *data)
     USARTzTxBuffer[0] = 0xaa;
     USARTzTxBuffer[1] = 0xaa;
 
-    USARTzTxBuffer[2] = data->Speed_A;
-    USARTzTxBuffer[3] = data->Speed_B;
-    USARTzTxBuffer[4] = data->Speed_C;
-    USARTzTxBuffer[5] = data->Speed_D;
+    USARTzTxBuffer[2] = data->Speed_A.cv[0];
+	USARTzTxBuffer[3] = data->Speed_A.cv[1];
+	
+    USARTzTxBuffer[4] = data->Speed_B.cv[0];
+	USARTzTxBuffer[5] = data->Speed_B.cv[1];
+	
+    USARTzTxBuffer[6] = data->Speed_C.cv[0];
+	USARTzTxBuffer[7] = data->Speed_C.cv[0];
+	
+    USARTzTxBuffer[8] = data->Speed_D.cv[0];
+	USARTzTxBuffer[9] = data->Speed_D.cv[0];
 
-    USARTzTxBuffer[6] = data->yaw.cv[0];
-    USARTzTxBuffer[7] = data->yaw.cv[1];
+    USARTzTxBuffer[10] = data->yaw.cv[0];
+    USARTzTxBuffer[11] = data->yaw.cv[1];
 
-    USARTzTxBuffer[8] = USARTzTxBuffer[2] ^ USARTzTxBuffer[3] ^ USARTzTxBuffer[4] ^ USARTzTxBuffer[5] ^
-                         USARTzTxBuffer[6] ^ USARTzTxBuffer[7];
+    USARTzTxBuffer[12] = USARTzTxBuffer[2] ^ USARTzTxBuffer[3] ^ USARTzTxBuffer[4] ^ USARTzTxBuffer[5] ^
+                         USARTzTxBuffer[6] ^ USARTzTxBuffer[7] ^ USARTzTxBuffer[8] ^ USARTzTxBuffer[9] ^
+						 USARTzTxBuffer[10] ^ USARTzTxBuffer[11];
 
-    UART_DMA_Start_tx(9);	//数据包发送
+    UART_DMA_Start_tx(13);	//数据包发送
 }
 
 /*************************************************
@@ -228,8 +236,8 @@ int8_t UART_data_check(uint8_t	*pdata)
     int8_t	crc = 0;
     int8_t  p_crc = 0;
     if((*(pdata + 0) == 0xff) && (*(pdata + 1) == 0xff)) {
-        crc = (*(pdata + 2)) ^ (*(pdata + 3)) ^ (*(pdata + 4));//不进行类型转换，负数不正常
-        p_crc = (int8_t)(*(pdata + 5));//不进行类型转换，负数不正常
+        crc = (*(pdata + 2)) ^ (*(pdata + 3)) ^ (*(pdata + 4)) ^ (*(pdata + 5)) ^ (*(pdata + 6)) ^ (*(pdata + 7));//不进行类型转换，负数不正常
+        p_crc = (int8_t)(*(pdata + 8));//不进行类型转换，负数不正常
     }
     else return 0;
 
@@ -237,9 +245,15 @@ int8_t UART_data_check(uint8_t	*pdata)
 
     //数据包分析正确，提取数据
     memset(&uart_rcv_data, 0, sizeof(uart_rcv_data));
-    uart_rcv_data.vx = *(pdata + 2);
-    uart_rcv_data.vy = *(pdata + 3);
-    uart_rcv_data.vw = *(pdata + 4);
+	
+    uart_rcv_data.vx.cv[0] = *(pdata + 2);
+	uart_rcv_data.vx.cv[1] = *(pdata + 3);
+	
+    uart_rcv_data.vy.cv[0] = *(pdata + 4);
+	uart_rcv_data.vy.cv[1] = *(pdata + 5);
+	
+    uart_rcv_data.vw.cv[0] = *(pdata + 6);
+	uart_rcv_data.vw.cv[1] = *(pdata + 7);
 
     return 1;
 }

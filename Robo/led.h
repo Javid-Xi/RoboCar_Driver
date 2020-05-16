@@ -18,6 +18,7 @@
 #define LED_G_Toggle()		GPIO_WriteBit(GPIOA, GPIO_Pin_8, (BitAction) (1 - GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_8)))	//LEDGÂÌÉ«×´Ì¬·­×ª
 
 void LED_Init(void);
-
+void Sysinit_Complete(void);
+	
 #endif 
 

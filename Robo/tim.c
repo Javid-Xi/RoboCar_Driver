@@ -48,6 +48,7 @@ void TIM6_Init(uint16_t cnt_us)
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;		// 设置子优先级
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
+	
 }
 
 /*************************************************

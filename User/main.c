@@ -28,9 +28,9 @@
 //车体参数
 #define ROBOT_AB  1   //车体尺寸，车轮距离中心距之和
 
-#define LIMIT_VX  50  //速度限制
-#define LIMIT_VY  50  //速度限制
-#define LIMIT_VZ  50  //速度限制
+#define LIMIT_VX  200  //速度限制
+#define LIMIT_VY  200  //速度限制
+#define LIMIT_VZ  200  //速度限制
 
 //编码器控制，0-A，1-B，2-C，3-D
 int16_t encoder[4];	//编码器绝对值
@@ -39,19 +39,19 @@ int16_t encoder_delta_target[4] = {0}; //编码器目标值，代表目标速度
 int16_t motor_pwm[4];  //电机PWM速度
 
 //设置速度
-int8_t vx; //X轴运动速度，控制横向移动
-int8_t vy; //Y轴运动速度，控制前后移动
-int8_t vz; //Z轴运动速度，控制转向
+int16_t vx; //X轴运动速度，控制横向移动
+int16_t vy; //Y轴运动速度，控制前后移动
+int16_t vz; //Z轴运动速度，控制转向
 
 rcv_data	uart_rcv_data;//数据接收
 send_data uart_send_data;//数据发送
 extern MPU_rcv_data uart_mpu_rcv_data;
 
 //功能函数
-void MOVE_Kinematics(int16_t vx, int16_t vy, int16_t vz); //运行学解析
-
-void UART_data_analyze(uint8_t *comdata);	//蓝牙控制数据解析
-void PS2_data_analyze(void);		//PS2控制数据解析
+void Chassis_status_send(void);//发送底盘状态
+void MOVE_Kinematics(int16_t vx, int16_t vy, int16_t vz); //逆运动模型解算
+void UART_data_analyze(void);	//串口数据解析
+void PS2_data_analyze(void);	//PS2控制数据解析
 
 
 /*************************************************
@@ -61,7 +61,7 @@ void PS2_data_analyze(void);		//PS2控制数据解析
 int main(void)
 {
     uint8_t cnt = 1;  //周期计数变量
-	
+
     //设置中断优先级分组
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 
@@ -72,8 +72,8 @@ int main(void)
     delay_init();
 
     //JTAG口设置
-    JTAG_Set(JTAG_SWD_DISABLE);     //=====关闭JTAG接口
-    JTAG_Set(SWD_ENABLE);           //=====打开SWD接口 可以利用主板的SWD接口调试
+    JTAG_Set(JTAG_SWD_DISABLE);     //关闭JTAG接口
+    JTAG_Set(SWD_ENABLE);           //打开SWD接口 可以利用主板的SWD接口调试
 
     //LED灯，ps2手柄初始化
     KEY_Init();
@@ -82,13 +82,13 @@ int main(void)
 
     //串口初始化
     UART_DMA_Init();
-	UART_MPU_DMA_Init();
-	
-	//ADC初始化
+    UART_MPU_DMA_Init();
+
+    //ADC初始化
     ADC_DMA_Init();
 
     //定时器初始化
-    TIM6_Init(10000);//设置定时器周期定时时间，10ms
+    TIM6_Init(50000);//设置定时器周期定时时间，50ms 20hz
     TIM6_Cmd(ENABLE);//定时器使能
 
     //编码器初始化
@@ -103,90 +103,70 @@ int main(void)
     ENCODER_EF_SetCounter(ENCODER_MID_VALUE);
     ENCODER_GH_SetCounter(ENCODER_MID_VALUE);
 
-    delay_ms(500);
+    //系统初始化完成
+    Sysinit_Complete();
 
     while (1)
     {
-        //执行周期（10ms）100Hz
+        //执行周期（50ms）20Hz
         if(TIM_CheckIrqStatus())
         {
-            //计算编码器变化值，即获取小车实际速度
+
+            /************* 获取电机转速 **************/
             encoder_delta[0] = (ENCODER_AB_GetCounter() - ENCODER_MID_VALUE);
             encoder_delta[1] = -(ENCODER_CD_GetCounter() - ENCODER_MID_VALUE);
             encoder_delta[2] = -(ENCODER_EF_GetCounter() - ENCODER_MID_VALUE);
             encoder_delta[3] = (ENCODER_GH_GetCounter() - ENCODER_MID_VALUE);
 
-            //printf("%d %d %d %d\r\n", encoder_delta[0], encoder_delta[1], encoder_delta[2], encoder_delta[3]);
             //设置编码器初始中间值
             ENCODER_AB_SetCounter(ENCODER_MID_VALUE);
             ENCODER_CD_SetCounter(ENCODER_MID_VALUE);
             ENCODER_EF_SetCounter(ENCODER_MID_VALUE);
             ENCODER_GH_SetCounter(ENCODER_MID_VALUE);
 
-			//测试
-			if(cnt % 20 == 0)
-			{
-            uart_send_data.Speed_A =  encoder_delta[0];
-            uart_send_data.Speed_B =  encoder_delta[1];
-            uart_send_data.Speed_C =  encoder_delta[2];
-            uart_send_data.Speed_D =  encoder_delta[3];
-			
-			uart_send_data.yaw.sv = uart_mpu_rcv_data.yaw.sv;
+            /************* 发送底盘状态 **************/
+            Chassis_status_send();
 
-            UART_data_send(&uart_send_data);
-			}
+            /************* 控制模式 **************/
             //遥控控制
-            if(!PS2_RedLight() && cnt % 20 == 0 && Mode_get() == 0)
-            {
-                PS2_DataKey();	 //手柄按键捕获处理
-
-                vx = 0.1 * (PS2_AnologData(5) - 0x80);
-                vy = 0.2 * (- PS2_AnologData(6) + 0x7f);
-                vz = 0.1 * (- PS2_AnologData(3) + 0x80);
-            }
-
+            if(Mode_get() == 0)
+                PS2_data_analyze();
             //串口控制
-            if(Mode_get() == 1)
-            {
-                vx = 0.2 * uart_rcv_data.vx;
-                vy = 0.3 * uart_rcv_data.vy;
-                vz = - 0.2 * uart_rcv_data.vw;
-            }
-			
-            //运动解算
+            else UART_data_analyze();
+
+            /************* 运动解算 **************/
             MOVE_Kinematics(vx, vy, vz);
 
 //            //调试使用
-//            if(cnt % 50 == 0)
+//            if(cnt % 10 == 0)
 //            {
 //                printf("手柄原始数据：%d %d %d %d %d %d %d %d %d \r\n", Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[6], Data[7], Data[8]);
 //                printf("速度：%d %d %d \r\n", vx, vy, vz);
+//                printf("轮子实际速度：%d %d %d %d \r\n", encoder_delta[0], encoder_delta[1], encoder_delta[2], encoder_delta[3]);
 //                printf("解算速度：%d %d %d %d \r\n", encoder_delta_target[0], encoder_delta_target[1], encoder_delta_target[2], encoder_delta_target[3]);
 //                printf("mode: %d \r\n", Mode_get());
 //                printf("power: %d \r\n ", ADC_Get_power());
-//                printf("uart_rcv_data: %d %d %d \r\n", uart_rcv_data.vx, uart_rcv_data.vy, uart_rcv_data.vw);
+//                printf("uart_rcv_data: %d %d %d \r\n", uart_rcv_data.vx.sv, uart_rcv_data.vy.sv, uart_rcv_data.vw.sv);
 //            }
 
-            //PID控制
+            /************* PID控制 **************/
             motor_pwm[0] = Motor_PidCtl_A(encoder_delta_target[0], encoder_delta[0]);
             motor_pwm[1] = Motor_PidCtl_B(encoder_delta_target[1], encoder_delta[1]);
             motor_pwm[2] = Motor_PidCtl_C(encoder_delta_target[2], encoder_delta[2]);
             motor_pwm[3] = Motor_PidCtl_D(encoder_delta_target[3], encoder_delta[3]);
 
-            //电机执行动作
+            /************* 电机输出 **************/
             MOTOR_A_SetSpeed(motor_pwm[0]);
             MOTOR_B_SetSpeed(motor_pwm[1]);
             MOTOR_C_SetSpeed(motor_pwm[2]);
             MOTOR_D_SetSpeed(motor_pwm[3]);
 
-            //执行周期（100ms）10HZ
+            //执行周期（500ms）10HZ
             if(cnt % 10 == 0)
-            {
-                //正常运行时，绿色LED闪烁
                 LED_G_Toggle();
-            }
 
-            //更新计数周期
+
+            //更新计数周期 5s
             if(cnt != 100)
                 cnt++;
             else {
@@ -195,7 +175,6 @@ int main(void)
                 else GPIO_SetBits(GPIOB, GPIO_Pin_10);
                 cnt = 1;
             }
-
         }
     }
 }
@@ -231,53 +210,55 @@ void MOVE_Kinematics(int16_t vx, int16_t vy, int16_t vz)
 * Parameter: comdata 串口通信数据
 * Return: none
 *************************************************/
-void UART_data_analyze(uint8_t *comdata)
+void UART_data_analyze(void)
 {
-    //摇杆控制模式
-    if(comdata[0] == 0x31)
-    {
-        //遥控值换算速度值,通过系数控制取值范围
-        vx = 0.5 * (int8_t)comdata[3];
-        vy = 0.5 * (int8_t)comdata[4];
-        vz = -0.3 * (int8_t)comdata[1];
-    }
+    vx = 0.5 * uart_rcv_data.vx.sv;
+    vy = 1 * uart_rcv_data.vy.sv;
+    vz = - 0.5 * uart_rcv_data.vw.sv;
 
-    //体感控制模式
-    else if(comdata[0] == 0x33)
-    {
-        //遥控值换算速度值,通过系数控制取值范围
-        vx = 0;
-        vy = -(int8_t)comdata[3];
-        vz = -0.7 * (int8_t)comdata[2];
-    }
-
-    //参数设置
-    else
-    {
-        //设置电机PID参数，默认
-        if(comdata[0] == 11)
-        {
+//        //设置电机PID参数，默认
+//        if(comdata[0] == 11)
+//        {
 //            motor_kp = (int16_t)((comdata[1] << 8) | comdata[2]);
 //            motor_ki = (int16_t)((comdata[3] << 8) | comdata[4]);
 //            motor_kd = (int16_t)((comdata[5] << 8) | comdata[6]);
-        }
-    }
+//		}
 }
 
 /*************************************************
 * Function: UART_data_analyze
 * Description: PS2无线手柄控制数据解析
-* Parameter: comdata 通信数据
+* Parameter: none
 * Return: none
 *************************************************/
 void PS2_data_analyze(void)
 {
-    //判断是否为红灯模式（模拟模式）
+    if(!PS2_RedLight())
+    {
 
-    //设置x,y,z轴速度
-    PS2_DataKey();	 //手柄按键捕获处理
-    vx = (PS2_AnologData(PSS_RX) - 0x80);
-    vy = (PS2_AnologData(PSS_LY) - 0x7f);
-    vz = (PS2_AnologData(PSS_LX) - 0x80);
+        PS2_DataKey();	 //手柄按键捕获处理
 
+        vx = 0.5 * (PS2_AnologData(5) - 0x80);
+        vy = 1 * (- PS2_AnologData(6) + 0x7f);
+        vz = 0.5 * (- PS2_AnologData(3) + 0x80);
+    }
 }
+
+/*************************************************
+* Function: Chassis_status_send
+* Description: 发送底盘状态
+* Parameter: none
+* Return: none
+*************************************************/
+void Chassis_status_send(void)
+{
+    uart_send_data.Speed_A.sv =  encoder_delta[0];
+    uart_send_data.Speed_B.sv =  encoder_delta[1];
+    uart_send_data.Speed_C.sv =  encoder_delta[2];
+    uart_send_data.Speed_D.sv =  encoder_delta[3];
+
+    uart_send_data.yaw.sv = uart_mpu_rcv_data.yaw.sv;
+
+    UART_data_send(&uart_send_data);
+}
+

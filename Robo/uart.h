@@ -56,9 +56,9 @@ typedef	union {
 //接收数据结构
 typedef	struct {
 
-    int8_t vx;//线速度x
-    int8_t vy;//线速度y
-    int8_t vw;//角速度
+    short_union vx;//线速度x
+    short_union vy;//线速度y
+    short_union vw;//角速度
 
 
 } rcv_data;
@@ -67,10 +67,10 @@ typedef	struct {
 typedef	struct {
 
     //电机编码器读数
-    int8_t Speed_A;
-    int8_t Speed_B;
-    int8_t Speed_C;
-    int8_t Speed_D;
+    short_union Speed_A;
+    short_union Speed_B;
+    short_union Speed_C;
+    short_union Speed_D;
 
     //欧拉角
     short_union pitch;
