@@ -12,7 +12,7 @@
 #include "delay.h"
 
 //µ×ÅÌ¿ØÖÆÄ£Ê½
-uint8_t mode = 0;
+uint8_t mode = 1;
 
 /*************************************************
 * Function: KEY_Init

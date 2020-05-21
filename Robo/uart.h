@@ -59,7 +59,12 @@ typedef	struct {
     short_union vx;//线速度x
     short_union vy;//线速度y
     short_union vw;//角速度
-
+	
+	//pid
+	uint8_t pid_set;
+    short_union p;
+    short_union i;
+    short_union d;
 
 } rcv_data;
 
@@ -72,11 +77,13 @@ typedef	struct {
     short_union Speed_C;
     short_union Speed_D;
 
-    //欧拉角
-    short_union pitch;
-    short_union roll;
+    //偏航角
     short_union yaw;
-
+	
+	//PID
+    short_union p;
+    short_union i;
+    short_union d;
 
 } send_data;
 

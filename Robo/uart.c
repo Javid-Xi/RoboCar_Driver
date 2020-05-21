@@ -217,12 +217,22 @@ void UART_data_send(send_data *data)
 
     USARTzTxBuffer[10] = data->yaw.cv[0];
     USARTzTxBuffer[11] = data->yaw.cv[1];
+	
+	USARTzTxBuffer[12] = data->p.cv[0];
+    USARTzTxBuffer[13] = data->p.cv[1];
+	
+	USARTzTxBuffer[14] = data->i.cv[0];
+    USARTzTxBuffer[15] = data->i.cv[1];
+	
+	USARTzTxBuffer[16] = data->d.cv[0];
+    USARTzTxBuffer[17] = data->d.cv[1];
 
-    USARTzTxBuffer[12] = USARTzTxBuffer[2] ^ USARTzTxBuffer[3] ^ USARTzTxBuffer[4] ^ USARTzTxBuffer[5] ^
+    USARTzTxBuffer[18] = USARTzTxBuffer[2] ^ USARTzTxBuffer[3] ^ USARTzTxBuffer[4] ^ USARTzTxBuffer[5] ^
                          USARTzTxBuffer[6] ^ USARTzTxBuffer[7] ^ USARTzTxBuffer[8] ^ USARTzTxBuffer[9] ^
-						 USARTzTxBuffer[10] ^ USARTzTxBuffer[11];
+						 USARTzTxBuffer[10] ^ USARTzTxBuffer[11] ^ USARTzTxBuffer[12] ^ USARTzTxBuffer[13] ^
+						 USARTzTxBuffer[14] ^ USARTzTxBuffer[15] ^ USARTzTxBuffer[16] ^ USARTzTxBuffer[17] ;
 
-    UART_DMA_Start_tx(13);	//数据包发送
+    UART_DMA_Start_tx(19);	//数据包发送
 }
 
 /*************************************************
@@ -236,8 +246,9 @@ int8_t UART_data_check(uint8_t	*pdata)
     int8_t	crc = 0;
     int8_t  p_crc = 0;
     if((*(pdata + 0) == 0xff) && (*(pdata + 1) == 0xff)) {
-        crc = (*(pdata + 2)) ^ (*(pdata + 3)) ^ (*(pdata + 4)) ^ (*(pdata + 5)) ^ (*(pdata + 6)) ^ (*(pdata + 7));//不进行类型转换，负数不正常
-        p_crc = (int8_t)(*(pdata + 8));//不进行类型转换，负数不正常
+        crc = (*(pdata + 2)) ^ (*(pdata + 3)) ^ (*(pdata + 4)) ^ (*(pdata + 5)) ^ (*(pdata + 6)) ^ (*(pdata + 7)) 
+			^ (*(pdata + 8)) ^ (*(pdata + 9)) ^ (*(pdata + 10)) ^ (*(pdata + 11)) ^ (*(pdata + 12)) ^ (*(pdata + 13)) ^ (*(pdata + 14));//不进行类型转换，负数不正常
+        p_crc = (int8_t)(*(pdata + 15));//不进行类型转换，负数不正常
     }
     else return 0;
 
@@ -254,6 +265,17 @@ int8_t UART_data_check(uint8_t	*pdata)
 	
     uart_rcv_data.vw.cv[0] = *(pdata + 6);
 	uart_rcv_data.vw.cv[1] = *(pdata + 7);
+	
+	uart_rcv_data.pid_set = *(pdata + 8);
+		
+	uart_rcv_data.p.cv[0] = *(pdata + 9);
+	uart_rcv_data.p.cv[1] = *(pdata + 10);
+	
+	uart_rcv_data.i.cv[0] = *(pdata + 11);
+	uart_rcv_data.i.cv[1] = *(pdata + 12);
+	
+	uart_rcv_data.d.cv[0] = *(pdata + 13);
+	uart_rcv_data.d.cv[1] = *(pdata + 14);
 
     return 1;
 }

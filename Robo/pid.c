@@ -20,7 +20,7 @@ int16_t yaw_kd = 30; //PID参数
 
 /*************************************************
 * Function: Yaw_PidCtl
-* Description: 	电机A PID控制函数	
+* Description: 	电机A PID控制函数
 * Parameter:  	spd_target:编码器速度目标值
 *				spd_current: 编码器速度当前值
 * Return: 电机PWM速度
@@ -46,7 +46,7 @@ int16_t Yaw_PidCtl(int16_t yaw_target, int16_t yaw_current)
 
 /*************************************************
 * Function: Motor_PidCtl_A
-* Description: 	电机A PID控制函数	
+* Description: 	电机A PID控制函数
 * Parameter:  	spd_target:编码器速度目标值
 *				spd_current: 编码器速度当前值
 * Return: 电机PWM速度
@@ -72,7 +72,7 @@ int16_t Motor_PidCtl_A(int16_t spd_target, int16_t spd_current)
 
 /*************************************************
 * Function: Motor_PidCtl_B
-* Description: 	电机B PID控制函数	
+* Description: 	电机B PID控制函数
 * Parameter:  	spd_target:编码器速度目标值
 *				spd_current: 编码器速度当前值
 * Return: 电机PWM速度
@@ -98,7 +98,7 @@ int16_t Motor_PidCtl_B(int16_t spd_target, int16_t spd_current)
 
 /*************************************************
 * Function: Motor_PidCtl_C
-* Description: 	电机C PID控制函数	
+* Description: 	电机C PID控制函数
 * Parameter:  	spd_target:编码器速度目标值
 *				spd_current: 编码器速度当前值
 * Return: 电机PWM速度
@@ -124,7 +124,7 @@ int16_t Motor_PidCtl_C(int16_t spd_target, int16_t spd_current)
 
 /*************************************************
 * Function: Motor_PidCtl_D
-* Description: 	电机D PID控制函数	
+* Description: 	电机D PID控制函数
 * Parameter:  	spd_target:编码器速度目标值
 *				spd_current: 编码器速度当前值
 * Return: 电机PWM速度
@@ -146,4 +146,17 @@ int16_t Motor_PidCtl_D(int16_t spd_target, int16_t spd_current)
     bias_last = bias;
 
     return motor_pwm_out;
+}
+
+/*************************************************
+* Function: PID_Set
+* Description: 	PID参数设置
+* Parameter:  rcv_data* data
+* Return: none
+*************************************************/
+void PID_Set(rcv_data* data)
+{
+    motor_kp = data->p.sv;
+    motor_ki = data->i.sv;
+    motor_kd = data->d.sv;
 }
