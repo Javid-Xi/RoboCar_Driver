@@ -200,7 +200,7 @@ void UART_DMA_Read(void)
 *************************************************/
 void UART_data_send(send_data *data)
 {
-    USARTzTxBuffer[0] = 0xaa;
+    USARTzTxBuffer[0] = 0xff;
     USARTzTxBuffer[1] = 0xaa;
 
     USARTzTxBuffer[2] = data->Speed_A.cv[0];

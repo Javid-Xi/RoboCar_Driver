@@ -22,7 +22,7 @@
 
 #include "sys.h"
 
-#define USARTzTxBufferSize   64
+#define USARTzTxBufferSize   32
 #define USARTz							USART1
 #define USARTz_GPIO						GPIOA
 #define USARTz_CLK						RCC_APB2Periph_USART1
