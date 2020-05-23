@@ -220,7 +220,6 @@ void UART_data_send(send_data *data)
     USARTzTxBuffer[10] = data->yaw.cv[0];
     USARTzTxBuffer[11] = data->yaw.cv[1];
 
-
     USARTzTxBuffer[12] = USARTzTxBuffer[2] ^ USARTzTxBuffer[3] ^ USARTzTxBuffer[4] ^ USARTzTxBuffer[5] ^
                          USARTzTxBuffer[6] ^ USARTzTxBuffer[7] ^ USARTzTxBuffer[8] ^ USARTzTxBuffer[9] ^
                          USARTzTxBuffer[10] ^ USARTzTxBuffer[11];
