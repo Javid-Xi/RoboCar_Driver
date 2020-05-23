@@ -10,6 +10,7 @@
 
 #include "uart.h"
 #include "string.h"
+#include "pid.h"
 
 uint8_t USARTzTxBuffer[USARTzTxBufferSize];
 uint8_t USARTzRxBuffer[USARTzTxBufferSize];
@@ -17,6 +18,7 @@ uint8_t USARTzRxBufferD[USARTzTxBufferSize];
 
 //send_data	uart_send_data;//数据发送
 extern rcv_data	uart_rcv_data;//数据接收
+extern pid motor_pid;
 
 /*************************************************
 * Function: UART_Init
@@ -204,35 +206,26 @@ void UART_data_send(send_data *data)
     USARTzTxBuffer[1] = 0xaa;
 
     USARTzTxBuffer[2] = data->Speed_A.cv[0];
-	USARTzTxBuffer[3] = data->Speed_A.cv[1];
-	
+    USARTzTxBuffer[3] = data->Speed_A.cv[1];
+
     USARTzTxBuffer[4] = data->Speed_B.cv[0];
-	USARTzTxBuffer[5] = data->Speed_B.cv[1];
-	
+    USARTzTxBuffer[5] = data->Speed_B.cv[1];
+
     USARTzTxBuffer[6] = data->Speed_C.cv[0];
-	USARTzTxBuffer[7] = data->Speed_C.cv[0];
-	
+    USARTzTxBuffer[7] = data->Speed_C.cv[0];
+
     USARTzTxBuffer[8] = data->Speed_D.cv[0];
-	USARTzTxBuffer[9] = data->Speed_D.cv[0];
+    USARTzTxBuffer[9] = data->Speed_D.cv[0];
 
     USARTzTxBuffer[10] = data->yaw.cv[0];
     USARTzTxBuffer[11] = data->yaw.cv[1];
-	
-	USARTzTxBuffer[12] = data->p.cv[0];
-    USARTzTxBuffer[13] = data->p.cv[1];
-	
-	USARTzTxBuffer[14] = data->i.cv[0];
-    USARTzTxBuffer[15] = data->i.cv[1];
-	
-	USARTzTxBuffer[16] = data->d.cv[0];
-    USARTzTxBuffer[17] = data->d.cv[1];
 
-    USARTzTxBuffer[18] = USARTzTxBuffer[2] ^ USARTzTxBuffer[3] ^ USARTzTxBuffer[4] ^ USARTzTxBuffer[5] ^
+
+    USARTzTxBuffer[12] = USARTzTxBuffer[2] ^ USARTzTxBuffer[3] ^ USARTzTxBuffer[4] ^ USARTzTxBuffer[5] ^
                          USARTzTxBuffer[6] ^ USARTzTxBuffer[7] ^ USARTzTxBuffer[8] ^ USARTzTxBuffer[9] ^
-						 USARTzTxBuffer[10] ^ USARTzTxBuffer[11] ^ USARTzTxBuffer[12] ^ USARTzTxBuffer[13] ^
-						 USARTzTxBuffer[14] ^ USARTzTxBuffer[15] ^ USARTzTxBuffer[16] ^ USARTzTxBuffer[17] ;
+                         USARTzTxBuffer[10] ^ USARTzTxBuffer[11];
 
-    UART_DMA_Start_tx(19);	//数据包发送
+    UART_DMA_Start_tx(13);	//数据包发送
 }
 
 /*************************************************
@@ -245,10 +238,9 @@ int8_t UART_data_check(uint8_t	*pdata)
 {
     int8_t	crc = 0;
     int8_t  p_crc = 0;
-    if((*(pdata + 0) == 0xff) && (*(pdata + 1) == 0xff)) {
-        crc = (*(pdata + 2)) ^ (*(pdata + 3)) ^ (*(pdata + 4)) ^ (*(pdata + 5)) ^ (*(pdata + 6)) ^ (*(pdata + 7)) 
-			^ (*(pdata + 8)) ^ (*(pdata + 9)) ^ (*(pdata + 10)) ^ (*(pdata + 11)) ^ (*(pdata + 12)) ^ (*(pdata + 13)) ^ (*(pdata + 14));//不进行类型转换，负数不正常
-        p_crc = (int8_t)(*(pdata + 15));//不进行类型转换，负数不正常
+    if( *(pdata + 0) == 0xff ) {
+        crc = (*(pdata + 2)) ^ (*(pdata + 3)) ^ (*(pdata + 4)) ^ (*(pdata + 5)) ^ (*(pdata + 6)) ^ (*(pdata + 7));//不进行类型转换，负数不正常
+        p_crc = (int8_t)(*(pdata + 8));//不进行类型转换，负数不正常
     }
     else return 0;
 
@@ -256,26 +248,30 @@ int8_t UART_data_check(uint8_t	*pdata)
 
     //数据包分析正确，提取数据
     memset(&uart_rcv_data, 0, sizeof(uart_rcv_data));
-	
-    uart_rcv_data.vx.cv[0] = *(pdata + 2);
-	uart_rcv_data.vx.cv[1] = *(pdata + 3);
-	
-    uart_rcv_data.vy.cv[0] = *(pdata + 4);
-	uart_rcv_data.vy.cv[1] = *(pdata + 5);
-	
-    uart_rcv_data.vw.cv[0] = *(pdata + 6);
-	uart_rcv_data.vw.cv[1] = *(pdata + 7);
-	
-	uart_rcv_data.pid_set = *(pdata + 8);
-		
-	uart_rcv_data.p.cv[0] = *(pdata + 9);
-	uart_rcv_data.p.cv[1] = *(pdata + 10);
-	
-	uart_rcv_data.i.cv[0] = *(pdata + 11);
-	uart_rcv_data.i.cv[1] = *(pdata + 12);
-	
-	uart_rcv_data.d.cv[0] = *(pdata + 13);
-	uart_rcv_data.d.cv[1] = *(pdata + 14);
+
+    if( *(pdata + 1) == 0xff)
+    {
+        uart_rcv_data.vx.cv[0] = *(pdata + 2);
+        uart_rcv_data.vx.cv[1] = *(pdata + 3);
+
+        uart_rcv_data.vy.cv[0] = *(pdata + 4);
+        uart_rcv_data.vy.cv[1] = *(pdata + 5);
+
+        uart_rcv_data.vw.cv[0] = *(pdata + 6);
+        uart_rcv_data.vw.cv[1] = *(pdata + 7);
+    }
+
+    else if(*(pdata + 1) == 0xfe )
+    {
+        motor_pid.p.cv[0] = *(pdata + 2);
+        motor_pid.p.cv[1] = *(pdata + 3);
+
+        motor_pid.i.cv[0] = *(pdata + 4);
+        motor_pid.i.cv[1] = *(pdata + 5);
+
+        motor_pid.d.cv[0] = *(pdata + 6);
+        motor_pid.d.cv[1] = *(pdata + 7);
+    }
 
     return 1;
 }

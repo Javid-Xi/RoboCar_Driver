@@ -47,10 +47,6 @@ rcv_data	uart_rcv_data;//数据接收
 send_data uart_send_data;//数据发送
 extern MPU_rcv_data uart_mpu_rcv_data;
 
-extern int16_t motor_kp; //PID参数
-extern int16_t motor_ki; //PID参数
-extern int16_t motor_kd; //PID参数
-
 //功能函数
 void Chassis_status_send(void);//发送底盘状态
 void MOVE_Kinematics(int16_t vx, int16_t vy, int16_t vz); //逆运动模型解算
@@ -216,17 +212,9 @@ void MOVE_Kinematics(int16_t vx, int16_t vy, int16_t vz)
 *************************************************/
 void UART_data_analyze(void)
 {
-    vx = 0.5 * uart_rcv_data.vx.sv;
-    vy = 1 * uart_rcv_data.vy.sv;
-    vz = - 0.5 * uart_rcv_data.vw.sv;
-
-    if(uart_rcv_data.pid_set == 1)
-    {
-        motor_kp = uart_rcv_data.p.sv;
-        motor_ki = uart_rcv_data.i.sv;
-        motor_kd = uart_rcv_data.d.sv;
-    }
-
+    vx = uart_rcv_data.vx.sv;
+    vy = uart_rcv_data.vy.sv;
+    vz = uart_rcv_data.vw.sv;
 }
 
 /*************************************************
@@ -262,10 +250,6 @@ void Chassis_status_send(void)
     uart_send_data.Speed_D.sv =  encoder_delta[3];
 
     uart_send_data.yaw.sv = uart_mpu_rcv_data.yaw.sv;
-
-    uart_send_data.p.sv = motor_kp;
-    uart_send_data.i.sv = motor_ki;
-    uart_send_data.d.sv = motor_kd;
 
     UART_data_send(&uart_send_data);
 }

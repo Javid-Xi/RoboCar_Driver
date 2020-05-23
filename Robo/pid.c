@@ -10,13 +10,8 @@
 
 #include "pid.h"
 
-int16_t motor_kp = 130; //PID参数
-int16_t motor_ki = 0; //PID参数
-int16_t motor_kd = 30; //PID参数
-
-int16_t yaw_kp = 130; //PID参数
-int16_t yaw_ki = 0; //PID参数
-int16_t yaw_kd = 30; //PID参数
+pid motor_pid = {130,0,30};
+pid yaw_pid = {0,0,0};
 
 /*************************************************
 * Function: Yaw_PidCtl
@@ -37,7 +32,7 @@ int16_t Yaw_PidCtl(int16_t yaw_target, int16_t yaw_current)
     if(bias_integral > PID_INTEGRAL_UP) bias_integral = PID_INTEGRAL_UP;
     if(bias_integral < -PID_INTEGRAL_UP) bias_integral = -PID_INTEGRAL_UP;
 
-    yaw_speed += yaw_kp * bias * PID_SCALE + yaw_kd * (bias - bias_last) * PID_SCALE + yaw_ki * bias_integral * PID_SCALE;
+    yaw_speed += yaw_pid.p.sv * bias * PID_SCALE + yaw_pid.d.sv * (bias - bias_last) * PID_SCALE + yaw_pid.i.sv * bias_integral * PID_SCALE;
 
     bias_last = bias;
 
@@ -63,7 +58,7 @@ int16_t Motor_PidCtl_A(int16_t spd_target, int16_t spd_current)
     if(bias_integral > PID_INTEGRAL_UP)bias_integral = PID_INTEGRAL_UP;
     if(bias_integral < -PID_INTEGRAL_UP)bias_integral = -PID_INTEGRAL_UP;
 
-    motor_pwm_out += motor_kp * bias * PID_SCALE + motor_kd * (bias - bias_last) * PID_SCALE + motor_ki * bias_integral * PID_SCALE;
+    motor_pwm_out += motor_pid.p.sv * bias * PID_SCALE + motor_pid.d.sv * (bias - bias_last) * PID_SCALE + motor_pid.i.sv * bias_integral * PID_SCALE;
 
     bias_last = bias;
 
@@ -89,7 +84,7 @@ int16_t Motor_PidCtl_B(int16_t spd_target, int16_t spd_current)
     if(bias_integral > PID_INTEGRAL_UP)bias_integral = PID_INTEGRAL_UP;
     if(bias_integral < -PID_INTEGRAL_UP)bias_integral = -PID_INTEGRAL_UP;
 
-    motor_pwm_out += motor_kp * bias * PID_SCALE + motor_kd * (bias - bias_last) * PID_SCALE + motor_ki * bias_integral * PID_SCALE;
+    motor_pwm_out += motor_pid.p.sv * bias * PID_SCALE + motor_pid.d.sv * (bias - bias_last) * PID_SCALE + motor_pid.i.sv * bias_integral * PID_SCALE;
 
     bias_last = bias;
 
@@ -115,7 +110,7 @@ int16_t Motor_PidCtl_C(int16_t spd_target, int16_t spd_current)
     if(bias_integral > PID_INTEGRAL_UP)bias_integral = PID_INTEGRAL_UP;
     if(bias_integral < -PID_INTEGRAL_UP)bias_integral = -PID_INTEGRAL_UP;
 
-    motor_pwm_out += motor_kp * bias * PID_SCALE + motor_kd * (bias - bias_last) * PID_SCALE + motor_ki * bias_integral * PID_SCALE;
+    motor_pwm_out += motor_pid.p.sv * bias * PID_SCALE + motor_pid.d.sv * (bias - bias_last) * PID_SCALE + motor_pid.i.sv * bias_integral * PID_SCALE;
 
     bias_last = bias;
 
@@ -141,22 +136,9 @@ int16_t Motor_PidCtl_D(int16_t spd_target, int16_t spd_current)
     if(bias_integral > PID_INTEGRAL_UP)bias_integral = PID_INTEGRAL_UP;
     if(bias_integral < -PID_INTEGRAL_UP)bias_integral = -PID_INTEGRAL_UP;
 
-    motor_pwm_out += motor_kp * bias * PID_SCALE + motor_kd * (bias - bias_last) * PID_SCALE + motor_ki * bias_integral * PID_SCALE;
+    motor_pwm_out += motor_pid.p.sv * bias * PID_SCALE + motor_pid.d.sv * (bias - bias_last) * PID_SCALE + motor_pid.i.sv * bias_integral * PID_SCALE;
 
     bias_last = bias;
 
     return motor_pwm_out;
-}
-
-/*************************************************
-* Function: PID_Set
-* Description: 	PID参数设置
-* Parameter:  rcv_data* data
-* Return: none
-*************************************************/
-void PID_Set(rcv_data* data)
-{
-    motor_kp = data->p.sv;
-    motor_ki = data->i.sv;
-    motor_kd = data->d.sv;
 }
