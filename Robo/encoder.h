@@ -11,7 +11,7 @@
 #ifndef __ENCODER_H
 #define __ENCODER_H
 
-#include "stm32f10x.h"
+#include "sys.h"
 
 void ENCODER_AB_Init(uint16_t cycle);          //编码器初始化
 uint16_t ENCODER_AB_GetCounter(void);          //编码器获取计数器数值
