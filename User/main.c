@@ -171,8 +171,8 @@ int main(void)
                 cnt++;
             else {
                 if(ADC_Get_power() < VBAT_MIN)
-                    GPIO_ResetBits(GPIOB, GPIO_Pin_10);//µÍµçÁ¿ ·äÃùÆ÷±¨¾¯
-                else GPIO_SetBits(GPIOB, GPIO_Pin_10);
+                    GPIO_ResetBits(BEEP_PIN_Port, BEEP_PIN);//µÍµçÁ¿ ·äÃùÆ÷±¨¾¯
+                else GPIO_SetBits(BEEP_PIN_Port, BEEP_PIN);
                 cnt = 1;
             }
         }

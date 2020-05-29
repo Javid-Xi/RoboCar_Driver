@@ -111,8 +111,6 @@ void UART_DMA_Init(void)
     USART_DMACmd(USARTz, USART_DMAReq_Rx, ENABLE);
     USART_Cmd(USARTz, ENABLE);
 
-    USART_DMACmd(USARTz, USART_DMAReq_Tx, ENABLE);
-    USART_DMACmd(USARTz, USART_DMAReq_Rx, ENABLE);
 }
 
 
@@ -128,7 +126,7 @@ void UART_DMA_Init(void)
 void DMA1_Channel4_IRQHandler(void)
 {
     //判断是否发送完成
-    if(DMA_GetITStatus(DMA1_FLAG_TC4))
+    if(DMA_GetITStatus(UASRTz_TX_DMA_TC))
     {
         DMA_ClearFlag(USARTz_Tx_DMA_FLAG);    //清除DMA所有标志
         DMA_Cmd(USARTz_Tx_DMA_Channe, DISABLE);  //关闭DMA发送通道

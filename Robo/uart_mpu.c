@@ -137,7 +137,7 @@ void UART_MPU_DMA_Init(void)
 void DMA1_Channel7_IRQHandler(void)
 {
     //判断是否发送完成
-    if(DMA_GetITStatus(DMA1_FLAG_TC7))
+    if(DMA_GetITStatus(UART_MPU_TX_DMA_TC))
     {
         DMA_ClearFlag(UART_MPU_Tx_DMA_FLAG);    //清除DMA所有标志
         DMA_Cmd(UART_MPU_Tx_DMA_Channe, DISABLE);  //关闭DMA发送通道

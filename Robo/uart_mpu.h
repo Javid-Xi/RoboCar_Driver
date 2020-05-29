@@ -27,6 +27,7 @@
 #define UART_MPU_Tx_DMA_Channe				DMA1_Channel7
 #define UART_MPU_Tx_DMA_FLAG				DMA1_FLAG_GL7
 #define UART_MPU_TX_DMA_IRQ					DMA1_Channel7_IRQn
+#define UART_MPU_TX_DMA_TC					DMA1_FLAG_TC7
 
 #define UART_MPU_Rx_DMA_Channe				DMA1_Channel6
 #define UART_MPU_Rx_DMA_FLAG				DMA1_FLAG_GL6

@@ -24,19 +24,20 @@ void LED_Init(void)
     //LED GPIO≈‰÷√
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB, ENABLE);
 
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+    GPIO_InitStructure.GPIO_Pin = LED_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_Init(LED_PIN_Port, &GPIO_InitStructure);
 
     //πÿ±’LEDµ∆
-    GPIO_SetBits(GPIOA, GPIO_Pin_8);
+    GPIO_SetBits(LED_PIN_Port, LED_PIN);
 
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+	//BEEP_GPIO≈‰÷√
+    GPIO_InitStructure.GPIO_Pin = BEEP_PIN;
+    GPIO_Init(BEEP_PIN_Port, &GPIO_InitStructure);
 
     //πÿ±’∑‰√˘∆˜
-    GPIO_SetBits(GPIOB, GPIO_Pin_10);
+    GPIO_SetBits(BEEP_PIN_Port, BEEP_PIN);
 }
 
 /*************************************************
@@ -47,23 +48,16 @@ void LED_Init(void)
 *************************************************/
 void Sysinit_Complete(void)
 {
-    GPIO_ResetBits(GPIOB, GPIO_Pin_10);
-    GPIO_ResetBits(GPIOA, GPIO_Pin_8);
-    delay_ms(100);
-    GPIO_SetBits(GPIOB, GPIO_Pin_10);
-    GPIO_SetBits(GPIOA, GPIO_Pin_8);
-    delay_ms(100);
-    GPIO_ResetBits(GPIOB, GPIO_Pin_10);
-    GPIO_ResetBits(GPIOA, GPIO_Pin_8);
-    delay_ms(100);
-    GPIO_SetBits(GPIOB, GPIO_Pin_10);
-    GPIO_SetBits(GPIOA, GPIO_Pin_8);
-    delay_ms(100);
-    GPIO_ResetBits(GPIOB, GPIO_Pin_10);
-    GPIO_ResetBits(GPIOA, GPIO_Pin_8);
-    delay_ms(100);
-    GPIO_SetBits(GPIOB, GPIO_Pin_10);
-    GPIO_SetBits(GPIOA, GPIO_Pin_8);
+    uint8_t i;
+    for(i = 0; i < 3; i++)
+    {
+        GPIO_ResetBits(BEEP_PIN_Port, BEEP_PIN);
+        GPIO_ResetBits(LED_PIN_Port, LED_PIN);
+        delay_ms(100);
+		GPIO_SetBits(BEEP_PIN_Port, BEEP_PIN);
+        GPIO_SetBits(LED_PIN_Port, LED_PIN);
+		delay_ms(100);
+    }
 }
 
 
