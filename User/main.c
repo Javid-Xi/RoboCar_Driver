@@ -13,6 +13,7 @@
 #include "led.h"
 #include "uart.h"
 #include "uart_mpu.h"
+#include "uart_dbg.h"
 #include "motor.h"
 #include "encoder.h"
 #include "tim.h"
@@ -81,8 +82,11 @@ int main(void)
     PS2_Init();
 
     //串口初始化
-    UART_DMA_Init();
+	UART_DMA_Init();
     UART_MPU_DMA_Init();
+	
+	//调试
+	//UART_DBG_Init(9600);
 
     //ADC初始化
     ADC_DMA_Init();

@@ -195,7 +195,7 @@ void UART_MPU_DMA_Read(void)
     }
     //分析收到的数据包
     if(UART_MPU_data_check(UART_MPURxBufferD) == 0)
-        printf("data analyze error\n\r");
+        //printf("data analyze error\n\r");
 
     for(i = 0; i < rxcounter; i++)
         UART_MPURxBuffer[i] = 0;//clear Rx buffer

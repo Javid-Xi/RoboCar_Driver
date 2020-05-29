@@ -188,7 +188,7 @@
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
-            <useUlib>0</useUlib>
+            <useUlib>1</useUlib>
             <EndSel>0</EndSel>
             <uLtcg>0</uLtcg>
             <nSecure>0</nSecure>
@@ -466,6 +466,11 @@
               <FileName>uart_mpu.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Robo\uart_mpu.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_dbg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Robo\uart_dbg.c</FilePath>
             </File>
           </Files>
         </Group>

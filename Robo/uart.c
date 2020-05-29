@@ -22,7 +22,7 @@ extern pid motor_pid;
 
 /*************************************************
 * Function: UART_Init
-* Description: uart1 dma配置 初始化
+* Description: uart3 dma配置 初始化
 * Parameter: none
 * Return: none
 *************************************************/
@@ -117,13 +117,13 @@ void UART_DMA_Init(void)
 /*************************DMA发送*****************************/
 
 /*************************************************
-* Function: DMA1_Channel4_IRQHandler
-* Description: dma1通道4中断服务函数
+* Function: DMA1_Channel2_IRQHandler
+* Description: dma1通道2中断服务函数
 * Parameter: none
 * Return: none
 * Note: 中断向量定义在startup_stm32f10x.s文件中
 *************************************************/
-void DMA1_Channel4_IRQHandler(void)
+void DMA1_Channel2_IRQHandler(void)
 {
     //判断是否发送完成
     if(DMA_GetITStatus(UASRTz_TX_DMA_TC))
@@ -154,7 +154,7 @@ void UART_DMA_Start_tx(uint8_t size)
 * Return: none
 * Note: 中断向量定义在startup_stm32f10x.s中
 *************************************************/
-void USART1_IRQHandler(void)
+void USART3_IRQHandler(void)
 {
     if(USART_GetITStatus(USARTz, USART_IT_IDLE) != RESET)
     {
@@ -184,7 +184,7 @@ void UART_DMA_Read(void)
     }
     //分析收到的数据包
     if(UART_data_check(USARTzRxBufferD) == 0)
-        printf("data analyze error\n\r");
+        //printf("data analyze error\n\r");
 
     for(i = 0; i < rxcounter; i++)
         USARTzRxBuffer[i] = 0;//clear Rx buffer

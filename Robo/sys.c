@@ -6,7 +6,6 @@
 * @date         2020-05-08
 * @version      1.0
 * @Note			JTAG SWD设置
-*				printf设置
 *				位操作设置
 ***********************************************************/
 
@@ -34,29 +33,3 @@ void JTAG_Set(uint8_t mode)
 	AFIO->MAPR&=0XF8FFFFFF; //清除MAPR的[26:24]
 	AFIO->MAPR|=temp;       //设置jtag模式
 } 
-
-
-/***************** 支持printf ****************/
-#if 0
-#pragma import(__use_no_semihosting)
-//标准库需要的支持函数
-struct __FILE
-{
-    int handle;
-
-};
-
-FILE __stdout;
-//定义_sys_exit()以避免使用半主机模式
-void _sys_exit(int x)
-{
-    x = x;
-}
-//重定义fputc函数
-int fputc(int ch, FILE *f)
-{
-    while((USART1->SR & 0X40) == 0); //循环发送,直到发送完毕
-    USART1->DR = (u8) ch;
-    return ch;
-}
-#endif
