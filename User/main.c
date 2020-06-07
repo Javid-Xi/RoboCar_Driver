@@ -33,6 +33,8 @@
 #define LIMIT_VY  200  //速度限制
 #define LIMIT_VZ  200  //速度限制
 
+extern uint8_t mode;
+
 //编码器控制，0-A，1-B，2-C，3-D
 int16_t encoder[4];	//编码器绝对值
 int16_t encoder_delta[4];	//编码器相对变化值,代表实际速度
@@ -73,8 +75,8 @@ int main(void)
     delay_init();
 
     //JTAG口设置
-    JTAG_Set(JTAG_SWD_DISABLE);     //关闭JTAG接口
-    JTAG_Set(SWD_ENABLE);           //打开SWD接口 可以利用主板的SWD接口调试
+    JTAG_Set(JTAG_SWD_DISABLE); //关闭JTAG接口
+    JTAG_Set(SWD_ENABLE);		//打开SWD接口 可以利用主板的SWD接口调试
 
     //LED灯，ps2手柄初始化
     KEY_Init();
@@ -85,7 +87,7 @@ int main(void)
 	UART_DMA_Init();
     UART_MPU_DMA_Init();
 	
-	//调试
+	//调试串口
 	//UART_DBG_Init(9600);
 
     //ADC初始化
@@ -133,7 +135,7 @@ int main(void)
 
             /************* 控制模式 **************/
             //遥控控制
-            if(Mode_get() == 0)
+            if(mode == 0)
                 PS2_data_analyze();
             //串口控制
             else UART_data_analyze();
