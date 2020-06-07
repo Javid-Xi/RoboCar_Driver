@@ -5,7 +5,7 @@ Control Chip: STM32F103RCT6
 ## 1. 实物图 (RoboCar-N1)
 <div><img src="https://cdn.jsdelivr.net/gh/Javid-Xi/Auto-Navigation-RoboCar@1.7/RoboCar/RoboCar-N1.jpg" width="80%" /></div> 
 
-<div><img src="https://cdn.jsdelivr.net/gh/Javid-Xi/Auto-Navigation-RoboCar@1.7/RoboCar/RoboCar-N5.jpg" width="80%" /></div> 
+<div><img src="https://cdn.jsdelivr.net/gh/Javid-Xi/Auto-Navigation-RoboCar@1.7/RoboCar/RoboCar-N1-5.jpg" width="80%" /></div> 
 
 ## 2. 渲染图 (RoboCar)
 <div><img src="https://cdn.jsdelivr.net/gh/Javid-Xi/Auto-Navigation-RoboCar@1.7/Model/robocar1.jpg" width="80%" /></div>
