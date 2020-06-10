@@ -14,6 +14,6 @@
 #include "sys.h"
 
 void ADC_DMA_Init(void);
-uint16_t ADC_Get_power(void);
+uint16_t Get_power(void);
 
 #endif

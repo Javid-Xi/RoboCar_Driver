@@ -59,10 +59,22 @@ void KEY_Init(void)
 *************************************************/
 void EXTI9_5_IRQHandler(void)
 {
-    EXTI_ClearITPendingBit(EXTI_Line1);  //清除LINE1上的中断标志位
+    EXTI_ClearITPendingBit(EXTI_Line8);  //清除LINE8上的中断标志位
     delay_ms(20);//消抖
     if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_8) == 1)
     {
         mode = !mode;
     }
 }
+
+/*************************************************
+* Function: Get_mode
+* Description: 返回mode
+* Parameter: none
+* Return: mode
+*************************************************/
+inline uint8_t Get_mode(void)
+{
+    return mode;
+}
+

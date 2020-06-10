@@ -84,7 +84,7 @@ void ADC_DMA_Init(void)
 * Parameter: none
 * Return: ∑µªÿµÁ—π÷µ
 *************************************************/
-uint16_t ADC_Get_power(void)
+inline uint16_t Get_power(void)
 {
     return ADC_Val[0];
 }

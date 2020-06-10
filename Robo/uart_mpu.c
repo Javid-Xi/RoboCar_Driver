@@ -237,7 +237,7 @@ void UART_MPU_data_send(u8 mode)
 * Parameter: *pdata
 * Return: 1,success; 0,fail
 *************************************************/
-int8_t UART_MPU_data_check(uint8_t	*pdata)
+int8_t UART_MPU_data_check(const uint8_t	*pdata)
 {
     int8_t	crc = 0;
     int8_t  p_crc = 0;

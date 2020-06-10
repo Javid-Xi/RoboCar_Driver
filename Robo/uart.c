@@ -113,7 +113,6 @@ void UART_DMA_Init(void)
 
 }
 
-
 /*************************DMA发送*****************************/
 
 /*************************************************
@@ -139,6 +138,7 @@ void DMA1_Channel2_IRQHandler(void)
 * Parameter: size,发送数据长度
 * Return: none
 *************************************************/
+
 void UART_DMA_Start_tx(uint8_t size)
 {
     USARTz_Tx_DMA_Channe->CNDTR = (uint16_t)size; //重新赋值 指定发送缓存长度
@@ -198,7 +198,7 @@ void UART_DMA_Read(void)
 * Parameter: *data
 * Return: none
 *************************************************/
-void UART_data_send(send_data *data)
+void UART_data_send(const send_data *data)
 {
     USARTzTxBuffer[0] = 0xff;
     USARTzTxBuffer[1] = 0xaa;
@@ -231,7 +231,7 @@ void UART_data_send(send_data *data)
 * Parameter: *pdata
 * Return: 1,success; 0,fail
 *************************************************/
-int8_t UART_data_check(uint8_t	*pdata)
+int8_t UART_data_check(const uint8_t *pdata)
 {
     int8_t	crc = 0;
     int8_t  p_crc = 0;

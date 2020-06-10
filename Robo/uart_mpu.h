@@ -57,7 +57,7 @@ void UART_MPU_DMA_Init(void);
 void UART_MPU_DMA_Start(uint8_t size);
 void UART_MPU_DMA_Read(void);
 
-int8_t UART_MPU_data_check(uint8_t	*pdata);//接收数据分析
+int8_t UART_MPU_data_check(const uint8_t *pdata);//接收数据分析
 void UART_MPU_data_send(u8 mode);
 
 #endif

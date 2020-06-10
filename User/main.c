@@ -33,8 +33,6 @@
 #define LIMIT_VY  200  //速度限制
 #define LIMIT_VZ  200  //速度限制
 
-extern uint8_t mode;
-
 //编码器控制，0-A，1-B，2-C，3-D
 int16_t encoder[4];	//编码器绝对值
 int16_t encoder_delta[4];	//编码器相对变化值,代表实际速度
@@ -46,7 +44,7 @@ int16_t vx; //X轴运动速度，控制横向移动
 int16_t vy; //Y轴运动速度，控制前后移动
 int16_t vz; //Z轴运动速度，控制转向
 
-rcv_data	uart_rcv_data;//数据接收
+rcv_data uart_rcv_data;//数据接收
 send_data uart_send_data;//数据发送
 extern MPU_rcv_data uart_mpu_rcv_data;
 
@@ -135,7 +133,7 @@ int main(void)
 
             /************* 控制模式 **************/
             //遥控控制
-            if(mode == 0)
+            if(Get_mode() == 0)
                 PS2_data_analyze();
             //串口控制
             else UART_data_analyze();
@@ -176,7 +174,7 @@ int main(void)
             if(cnt != 100)
                 cnt++;
             else {
-                if(ADC_Get_power() < VBAT_MIN)
+                if(Get_power() < VBAT_MIN)
                     GPIO_ResetBits(BEEP_PIN_Port, BEEP_PIN);//低电量 蜂鸣器报警
                 else GPIO_SetBits(BEEP_PIN_Port, BEEP_PIN);
                 cnt = 1;
@@ -216,7 +214,7 @@ void MOVE_Kinematics(int16_t vx, int16_t vy, int16_t vz)
 * Parameter: comdata 串口通信数据
 * Return: none
 *************************************************/
-void UART_data_analyze(void)
+inline void UART_data_analyze(void)
 {
     vx = uart_rcv_data.vx.sv;
     vy = uart_rcv_data.vy.sv;
@@ -229,7 +227,7 @@ void UART_data_analyze(void)
 * Parameter: none
 * Return: none
 *************************************************/
-void PS2_data_analyze(void)
+inline void PS2_data_analyze(void)
 {
     if(!PS2_RedLight())
     {
@@ -248,7 +246,7 @@ void PS2_data_analyze(void)
 * Parameter: none
 * Return: none
 *************************************************/
-void Chassis_status_send(void)
+inline void Chassis_status_send(void)
 {
     uart_send_data.Speed_A.sv =  encoder_delta[0];
     uart_send_data.Speed_B.sv =  encoder_delta[1];

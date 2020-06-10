@@ -80,8 +80,8 @@ typedef	struct {
 void UART_DMA_Init(void);
 void UART_DMA_Start_tx(uint8_t size);
 void UART_DMA_Read(void);
-int8_t UART_data_check(uint8_t	*pdata);//接收数据分析
-void UART_data_send(send_data *data);//数据包发送
+int8_t UART_data_check(const uint8_t *pdata);//接收数据分析
+void UART_data_send(const send_data *data);//数据包发送
 
 #endif
 

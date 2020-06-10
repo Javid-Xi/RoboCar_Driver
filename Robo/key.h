@@ -13,7 +13,7 @@
 #include "sys.h"
 
 void KEY_Init(void);
-uint8_t Mode_get(void);
+uint8_t Get_mode(void);
 
 #endif
 
